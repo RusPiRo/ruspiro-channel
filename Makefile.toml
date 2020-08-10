@@ -34,10 +34,10 @@ KERNEL = "kernel8.img"
 
 [tasks.xbuild]
 command = "cargo"
-args = ["xbuild", "--target", "${BUILD_TARGET}", "--release", "--features", "${FEATURES}"]
+args = ["xbuild", "--target", "${BUILD_TARGET}", "--release"]
 
 [tasks.pi3]
-env = { FEATURES = "ruspiro_pi3" }
+env = { }
 run_task = "xbuild"
 
 [tasks.clean]
