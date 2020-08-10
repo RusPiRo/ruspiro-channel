@@ -1,0 +1,13 @@
+[package]
+name = "ruspiro-channel"
+version = "0.1.0"
+authors = ["2ndTaleStudio <pspwizard@gmx.de>"]
+edition = "2018"
+
+[lib]
+
+[dependencies]
+
+[dev-dependencies]
+assert_matches = "1.3"
+futures-util = { version = "0.3.5", default-features = false }
