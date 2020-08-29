@@ -1,0 +1,44 @@
+# build only master branch on commit's
+# all other branches build on PullRequest creation
+branches:
+  only:
+    - master
+
+language: rust
+
+rust:
+# build nightly only for the time beeing
+  - nightly-2020-05-14
+
+matrix:
+  fast_finish: true
+  include:
+    - name: "build 64Bit"
+      install:
+        - sudo apt-get install gcc-aarch64-linux-gnu
+        - rustup target add aarch64-unknown-none
+        - rustup component add rust-src
+        - rustup component add llvm-tools-preview
+        - cargo install cargo-xbuild
+        - cargo install cargo-make
+        # remove local path in the dependencies of the cargo file to ensure we use the version from crates.io
+        - sed -i 's/path.*=.*"\.\{2\}.*", version/version/g' Cargo.toml
+      script: cargo make pi3 --profile a64-travis
+
+    - name: "build 32Bit"
+      install:
+        - sudo apt-get install gcc-arm-none-eabi
+        - rustup target add armv7a-none-eabi
+        - rustup component add rust-src
+        - rustup component add llvm-tools-preview
+        - cargo install cargo-xbuild
+        - cargo install cargo-make
+        - sed -i 's/path.*=.*"\.\{2\}.*", version/version/g' Cargo.toml
+      # remove local path in the dependencies of the cargo file to ensure we use the version from crates.io
+      script: cargo make pi3 --profile a32
+
+    - name: "doc tests"
+      install:
+        # remove local path in the dependencies of the cargo file to ensure we use the version from crates.io
+        - sed -i 's/path.*=.*"\.\{2\}.*", version/version/g' Cargo.toml
+      script: cargo test --doc

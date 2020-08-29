@@ -10,6 +10,7 @@
 
 use alloc::boxed::Box;
 use core::sync::atomic::{AtomicPtr, Ordering};
+use ruspiro_lock::Spinlock;
 
 /// Representation of an entry in the [Queue]
 #[derive(Debug)]
@@ -40,6 +41,8 @@ pub struct Queue<T> {
     /// The tail of the [Queue] refers to the last node of the [Queue] new items can be [pushed]ed
     /// after
     tail: AtomicPtr<Node<T>>,
+
+    guard: Spinlock,
 }
 
 // The Queue is Send and Sync as it can be savely used accross cores
@@ -65,6 +68,7 @@ impl<T> Queue<T> {
         Queue {
             head: AtomicPtr::new(root),
             tail: AtomicPtr::new(root),
+            guard: Spinlock::new(),
         }
     }
 
@@ -88,7 +92,7 @@ impl<T> Queue<T> {
     pub fn pop(&self) -> Pop<T> {
         // for the time beeing popping from the queue is not "lockfree". However, as this happens
         // only outside of an interrupt this might be fine
-
+        self.guard.aquire();
         let result = unsafe {
             // get the first "pop-able" node from the head and replace it with a dummy node
             // to ensure simultaneus "pop's" does not happen in a strange order
@@ -96,8 +100,6 @@ impl<T> Queue<T> {
             // if this operation finishes any other core that tries to pop a Node will get the
             // dummy Node
             let head = self.head.swap(dummy, Ordering::SeqCst);
-            //info!("swapped");
-            //info!("swapped head {:#x?} - h {:#x?}", self.head, head);
             //let head = self.head.load(Ordering::Acquire);
             // this first entry is either the queue start marker/dummy node or the entry that has
             // been popped last. So the node we will pop now is it's next one
@@ -110,22 +112,16 @@ impl<T> Queue<T> {
                 //info!("stored");
                 if (*next).value.is_none() {
                     // this should never happen!
-                    //error!("next value is none !? at {:#x?}", next);
-                    //warn!("origin head: {:#x?}", head,);
-                    //warn!("actual head: {:#x?}", self.head);
-                    //warn!("Dummy: {:#x?}", dummy);
-
-                    // destruct the dummy node to release the memory
+                    // destruct the dummy node to release it's memory
                     let _: Box<Node<T>> = Box::from_raw(dummy);
 
                     Pop::Intermediate
                 } else {
                     let value = (*next).value.take().unwrap();
                     // we have stored a Box as rawpointer in the list
-                    // construct the Box from the raw pointer and "forget" about it to properly
-                    // destruct the same
+                    // construct the Box from the raw pointer and properly destruct the same
                     let _: Box<Node<T>> = Box::from_raw(head);
-                    // destruct the dummy node to release the memory
+                    // destruct the dummy node as well to release it's memory
                     let _: Box<Node<T>> = Box::from_raw(dummy);
                     Pop::Data(value)
                 }
@@ -133,8 +129,7 @@ impl<T> Queue<T> {
                 // if we get here the current head does not have any next item, so the queue is actually
                 // empty, or does contain the dummy entry, so restore the original head entry
                 let dummy = self.head.swap(head, Ordering::SeqCst);
-                //info!("swapped back");
-                // destruct the dummy node to release the memory
+                // destruct the dummy node to release it's memory
                 let _: Box<Node<T>> = Box::from_raw(dummy);
                 // if the head and tail where the same the Queue was really empty, otherwise it was an
                 // intermediate state
@@ -145,7 +140,7 @@ impl<T> Queue<T> {
                 }
             }
         };
-
+        self.guard.release();
         result
     }
 }
