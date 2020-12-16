@@ -3,12 +3,23 @@ name = "ruspiro-channel"
 version = "0.1.0"
 authors = ["2ndTaleStudio <pspwizard@gmx.de>"]
 edition = "2018"
+description = """
+Bare Metal Channel implementations for `no-std` environments, only requiring an 
+allocator to be provided.
+"""
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/RusPiRo/ruspiro-channel/tree/v||VERSION||"
+documentation = "https://docs.rs/ruspiro-channel/||VERSION||"
+categories = ["no-std", "embedded"]
+keywords = ["ruspiro", "channel"]
+exclude = [".travis.yml", "Makefile.toml"]
 
 [lib]
 
 [dependencies]
-ruspiro-lock = "0.3"
+ruspiro-lock = "0.4"
 
 [dev-dependencies]
-assert_matches = "1.3"
-futures-util = { version = "0.3.5", default-features = false }
+assert_matches = "1.4"
+futures-util = { version = "0.3", default-features = false }

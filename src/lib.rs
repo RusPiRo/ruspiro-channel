@@ -4,7 +4,7 @@
  * Author: André Borrmann
  * License: Apache License 2.0
  **********************************************************************************************************************/
-#![doc(html_root_url = "https://docs.rs/ruspiro-channel/0.1.0")]
+#![doc(html_root_url = "https://docs.rs/ruspiro-channel/||VERSION||")]
 #![cfg_attr(not(any(test, doctest)), no_std)]
 
 //! # Bare metal (``no_std``) channel implementations
