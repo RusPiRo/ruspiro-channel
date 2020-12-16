@@ -2,7 +2,7 @@
  * Copyright (c) 2019 by the authors
  *
  * Author: André Borrmann
- * License: Apache License 2.0
+ * License: MIT OR Apache License 2.0
  **********************************************************************************************************************/
 //! # Multi Producer Multi Consumer Queue
 //!
