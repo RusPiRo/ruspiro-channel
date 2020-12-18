@@ -11,9 +11,12 @@
 use alloc::sync::Arc;
 mod queue;
 use queue::*;
+//use ruspiro_lock::Mutex;
+//use alloc::collections::VecDeque;
 
-pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
+pub fn channel<T: 'static>() -> (Sender<T>, Receiver<T>) {
     let queue = Arc::new(Queue::new());
+    //let queue = Arc::new(Mutex::new(VecDeque::with_capacity(100)));
     (Sender::new(queue.clone()), Receiver::new(queue))
 }
 
@@ -21,23 +24,26 @@ pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
 /// The sending part could be used by several cores in parallel to push stuff to the queue
 pub struct Sender<T> {
     inner: Arc<Queue<T>>,
+    //inner: Arc<Mutex<VecDeque<T>>>,
 }
 
 #[doc(hidden)]
 unsafe impl<T> Send for Sender<T> {}
 
-impl<T> Sender<T> {
+impl<T: 'static> Sender<T> {
     pub fn new(inner: Arc<Queue<T>>) -> Self {
+    //pub fn new(inner: Arc<Mutex<VecDeque<T>>>) -> Self {
         Sender { inner }
     }
 
     pub fn send(&self, data: T) {
         self.inner.push(data)
+        //self.inner.lock().push_back(data)
     }
 }
 
 /// Enable cloning the Sender so it can be used at different cores, filling up the same queue
-impl<T> Clone for Sender<T> {
+impl<T: 'static> Clone for Sender<T> {
     fn clone(&self) -> Sender<T> {
         Sender::new(self.inner.clone())
     }
@@ -47,10 +53,12 @@ impl<T> Clone for Sender<T> {
 /// processing
 pub struct Receiver<T> {
     inner: Arc<Queue<T>>,
+    //inner: Arc<Mutex<VecDeque<T>>>,
 }
 
-impl<T> Receiver<T> {
+impl<T: 'static> Receiver<T> {
     pub fn new(inner: Arc<Queue<T>>) -> Self {
+    //pub fn new(inner: Arc<Mutex<VecDeque<T>>>) -> Self {
         Receiver { inner }
     }
 
@@ -60,12 +68,16 @@ impl<T> Receiver<T> {
             Pop::Data(v) => Ok(v),
             Pop::Empty | Pop::Intermediate => Err(()),
         }
+        /*match self.inner.lock().pop_front() {
+            Some(v) => Ok(v),
+            None => Err(()),
+        }*/
     }
 }
 
 /// Enable cloning the receiver so it can be used at different cores to receive data from the same
 /// queue
-impl<T> Clone for Receiver<T> {
+impl<T: 'static> Clone for Receiver<T> {
     fn clone(&self) -> Receiver<T> {
         Receiver::new(self.inner.clone())
     }
