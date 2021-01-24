@@ -4,14 +4,14 @@
  * Author: André Borrmann
  * License: MIT OR Apache License 2.0
  **********************************************************************************************************************/
-#![doc(html_root_url = "https://docs.rs/ruspiro-channel/||VERSION||")]
-#![cfg_attr(not(any(test, doctest)), no_std)]
-
 //! # Bare metal (``no_std``) channel implementations
 //!
-//! The follwoing channel implementations require only an allocator to be present as it uses heap allocations for the
-//! ``Arc`` types.
+//! The follwoing channel implementations require only an allocator to be present as it uses heap allocations.
+
+#![doc(html_root_url = "https://docs.rs/ruspiro-channel/||VERSION||")]
+#![no_std]
 
 extern crate alloc;
+extern crate rlibc;
 
 pub mod mpmc;

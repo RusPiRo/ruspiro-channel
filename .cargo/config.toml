@@ -1,0 +1,8 @@
+  [build]
+target = "aarch64-ruspiro.json"
+
+[unstable]
+build-std = ["core", "compiler_builtins", "alloc"]
+
+[target.'cfg(target_os = "none")']
+runner = "cargo make qemu-test"

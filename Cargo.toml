@@ -18,8 +18,9 @@ exclude = [".travis.yml", "Makefile.toml"]
 [lib]
 
 [dependencies]
+rlibc = "=1.0.0"
 ruspiro-arch-aarch64 = "0.1"
+futures-util = { version = "0.3", default-features = false, optional = true }
 
-[dev-dependencies]
-assert_matches = "1.4"
-futures-util = { version = "0.3", default-features = false }
+[features]
+async = ["futures-util"]

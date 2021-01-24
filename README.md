@@ -1,6 +1,5 @@
 # RusPiRo Channel
 
-
 [![Travis-CI Status](https://api.travis-ci.com/RusPiRo/ruspiro-channel.svg?branch=release)](https://travis-ci.org/RusPiRo/ruspiro-channel)
 [![Latest Version](https://img.shields.io/crates/v/ruspiro-channel.svg)](https://crates.io/crates/ruspiro-channel)
 [![Documentation](https://docs.rs/ruspiro-channel/badge.svg)](https://docs.rs/ruspiro-channel)

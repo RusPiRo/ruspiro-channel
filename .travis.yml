@@ -2,7 +2,7 @@
 # all other branches build on PullRequest creation
 branches:
   only:
-    - master
+    - development
     - release
 
 language: rust
@@ -11,13 +11,16 @@ rust:
 # build nightly only for the time beeing
   - nightly
 
+# increase build speed by caching installed cargo dependencies
+cache: cargo
+
 # define the stages and their order
 stages:
   - compile
   - test
   - publish_dry
   - name: prepare_release
-    if: branch = master AND type != pull_request
+    if: branch = development AND type != pull_request
   - name: deploy
     if: branch = release AND type != pull_request
   - name: publish
@@ -41,15 +44,17 @@ jobs:
     - stage: test
       name: "Run Doc Tests"
       install:
+        - cargo install cargo-make 
         # if we not build a PR we remove the patch of the dependencies to their github repo's
         - 'if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then sed -i "/{^\[patch\.crates-io\] /{:a;N;/\Z}/!ba};/^ruspiro-.*\(git\|path\).*/d" Cargo.toml; fi'
-      script: cargo test --doc --features ruspiro_pi3
+      script: cargo make doctest --profile dummy
     - stage: test
       name: "Run Unit Tests"
       install:
+        - cargo install cargo-make 
         # if we not build a PR we remove the patch of the dependencies to their github repo's
         - 'if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then sed -i "/{^\[patch\.crates-io\] /{:a;N;/\Z}/!ba};/^ruspiro-.*\(git\|path\).*/d" Cargo.toml; fi'
-      script: cargo test --tests --features ruspiro_pi3
+      script: cargo make unittest --profile dummy
 
     - stage: publish_dry
       name: "Run Cargo Publish Dry-Run"
@@ -60,7 +65,7 @@ jobs:
         - rustup target add aarch64-unknown-none
         - rustup component add rust-src
         - rustup component add llvm-tools-preview
-      script: cargo publish --dry-run --target aarch64-unknown-none --features ruspiro_pi3
+      script: cargo make publish_dry --profile travis
 
     - stage: prepare_release
       name: "Create PR against the release branch"
@@ -69,7 +74,7 @@ jobs:
 
     - stage: deploy
       name: "Create GitHub release"
-      
+      script: echo "creating github release"
       before_deploy:
         # extract current crate version from argo.toml
         - export CRATE_VERSION=v`sed -En 's/^version.*=.*\"(.*)\".*$/\1/p' < Cargo.toml`
@@ -113,5 +118,7 @@ jobs:
         - sed -i -e 's/||VERSION||/'$CRATE_VERSION'/g' Cargo.toml
         # also update the version in the lib.rs doc root url
         - sed -i -e 's/||VERSION||/'$CRATE_VERSION'/g' src/lib.rs
+        # and the README.md
+        - sed -i -e 's/||VERSION||/'$CRATE_VERSION'/g' README.md
       # publish with token and dirty flag as we just updated some files and won't commit them back to the branch
-      script: cargo publish --token $CRATES_TOKEN --allow-dirty --target aarch64-unknown-none --features ruspiro_pi3
+      script: cargo make publish --profile travis --env CRATES_TOKEN="$CRATES_TOKEN" > /dev/null
