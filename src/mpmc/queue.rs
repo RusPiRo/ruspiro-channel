@@ -64,6 +64,7 @@ pub struct Queue<T: Sized> {
 
 impl<T: Sized + 'static> Queue<T> {
   /// create a new empty [Queue]
+  #[allow(clippy::new_without_default)]
   pub fn new() -> Self {
     // at the beginning of the lifetime of the queue the head and tail does not point anywhere
     Self {
@@ -82,7 +83,7 @@ impl<T: Sized + 'static> Queue<T> {
     let old_node = self.head.swap(node, Ordering::AcqRel);
     dsb();
     // 3. let the old node know it's next node.
-    if old_node != ptr::null_mut() {
+    if !old_node.is_null() {
       unsafe {
         (*old_node).next.store(node, Ordering::SeqCst);
       }
@@ -101,7 +102,7 @@ impl<T: Sized + 'static> Queue<T> {
     dmb();
     let node = self.tail.swap(ptr::null_mut(), Ordering::AcqRel);
     dsb(); // from this moment all cores/thread accessing tail will see it as "empty"
-    if node == ptr::null_mut() {
+    if node.is_null() {
       return Pop::Intermediate;
     }
     // 2. if the node we popped last is the one sitting on head we have processed all nodes thus require to
@@ -117,7 +118,7 @@ impl<T: Sized + 'static> Queue<T> {
 
     // 4. if this node has a follow-up node place this one into the tail
     let next_node = node.next.load(Ordering::Acquire);
-    if next_node != ptr::null_mut() {
+    if !next_node.is_null() {
       self
         .tail
         .compare_and_swap(ptr::null_mut(), next_node, Ordering::AcqRel);
