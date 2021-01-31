@@ -126,7 +126,7 @@ impl<T: Sized + 'static> Queue<T> {
     }
 
     // 5. get the value from the node and return it
-    // if the node does not contain a value manicing is fine as this means the some node has been popped twice
+    // if the node does not contain a value panicing is fine as this means the same node has been popped twice
     // which is an implementation error
     let value = node.value.unwrap();
     Pop::Data(value)

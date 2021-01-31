@@ -2,21 +2,14 @@
 
 ## :apple: v0.1.0
 
-This is the base line version.
+Initial version of the bare metal channel implementation. The baseline version provides implementation for a lock-free *Multi-Producer-Multi-Consumer* (MPMC) channel. With the `async` feature the crate provides also an async version of this channel allowing the receiver to await new data.
 
 - ### :bulb: Features
   
-  List the features that were added with this release.
-
-- ### :detective: Fixes
-  
-  Not applicable.
-
-- ### :wrench: Maintenance
-
-  Not applicable
+  - initial lock-free MPMC channel implementation
+  - async channel version
 
 - ### :book: Documentation
   
-  Provide the initial documentation of the OS and its features.
+  Provide the initial documentation of the crate
   
