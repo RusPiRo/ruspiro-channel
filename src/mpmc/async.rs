@@ -30,6 +30,7 @@ pub fn async_channel<T: 'static>() -> (AsyncSender<T>, AsyncReceiver<T>) {
 }
 
 /// The sending part of a mpmc channel. This is used to send data through the channel to an receiver
+#[repr(C)]
 pub struct AsyncSender<T: 'static> {
   tx: Sender<T>,
   waker: Arc<AtomicWaker>,
@@ -54,6 +55,7 @@ impl<T: 'static> Clone for AsyncSender<T> {
 }
 
 /// The receiving part of the channel. This can be used to retreive data that has been send from the sending part of it
+#[repr(C)]
 pub struct AsyncReceiver<T: 'static> {
   rx: Receiver<T>,
   waker: Arc<AtomicWaker>,
