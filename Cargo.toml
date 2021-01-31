@@ -11,9 +11,12 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/RusPiRo/ruspiro-channel/tree/v||VERSION||"
 documentation = "https://docs.rs/ruspiro-channel/||VERSION||"
-categories = ["no-std", "embedded"]
-keywords = ["ruspiro", "channel"]
+categories = ["no-std", "embedded", "async"]
+keywords = ["ruspiro", "channel", "async", "raspberrypi"]
 exclude = [".travis.yml", "Makefile.toml"]
+
+[badges]
+maintenance = { status = "actively-developed" }
 
 [lib]
 
@@ -24,3 +27,6 @@ futures-util = { version = "0.3", default-features = false, optional = true }
 
 [features]
 async = ["futures-util"]
+
+[package.metadata.docs.rs]
+features = ["async"]
