@@ -27,3 +27,6 @@ futures-util = { version = "0.3", default-features = false, optional = true }
 
 [features]
 async = ["futures-util"]
+
+[package.metadata.docs.rs]
+features = ["async"]
