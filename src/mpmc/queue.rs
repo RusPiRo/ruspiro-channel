@@ -44,20 +44,20 @@ impl<T: Sized> Node<T> {
 
 #[derive(Debug)]
 pub enum Pop<T: Sized + 'static> {
-  /// When poping an entry from an empty [Queue] this is the result
+  /// When popping an entry from an empty [Queue] this is the result
   Empty,
-  /// The element that was poped from the [Queue]
+  /// The element that was popped from the [Queue]
   Data(T),
-  /// Intermediate state of poping a new node, the requestor should retry the [pop] attempt
+  /// Intermediate state of popping a new node, the requestor should retry the [pop] attempt
   Intermediate,
 }
 
 /// The actual Queue
-pub struct Queue<T: Sized> {
+pub struct Queue<T: Sized + 'static> {
   /// The head contains the pointer to the node that has been written last. Pushing to the queue will adjust
   /// the head.
   head: AtomicPtr<Node<T>>,
-  /// The tail contains the pointer to the node that need to be read first. Poping from the queue will adjust
+  /// The tail contains the pointer to the node that need to be read first. Popping from the queue will adjust
   /// tail
   tail: AtomicPtr<Node<T>>,
 }
@@ -90,9 +90,10 @@ impl<T: Sized + 'static> Queue<T> {
     }
     // 4. if the tail is not yet pointing anywhere set the tail to the node just inserted
     dmb();
-    self
+    // we can ignore the result of this operation. Err means the tail was alread set - so no need to update
+    let _ = self
       .tail
-      .compare_and_swap(ptr::null_mut(), node, Ordering::AcqRel);
+      .compare_exchange(ptr::null_mut(), node, Ordering::AcqRel, Ordering::Relaxed);
     dsb();
   }
 
@@ -108,9 +109,11 @@ impl<T: Sized + 'static> Queue<T> {
     // 2. if the node we popped last is the one sitting on head we have processed all nodes thus require to
     //    clean the head, otherwise dropping the node at the end of the pop would lead to access of freed memory
     //    when a new node is pushed
-    self
+    // we can ignore the result of the operation as Err just indicates that we have not yet reached the HEAD and thus
+    // do not want to do anything
+    let _ = self
       .head
-      .compare_and_swap(node, ptr::null_mut(), Ordering::AcqRel);
+      .compare_exchange(node, ptr::null_mut(), Ordering::AcqRel, Ordering::Relaxed);
     dsb();
 
     // 3. re-construct the boxed node from the raw pointer
@@ -119,9 +122,16 @@ impl<T: Sized + 'static> Queue<T> {
     // 4. if this node has a follow-up node place this one into the tail
     let next_node = node.next.load(Ordering::Acquire);
     if !next_node.is_null() {
-      self
-        .tail
-        .compare_and_swap(ptr::null_mut(), next_node, Ordering::AcqRel);
+      // TODO: Check if we need to handle the case where tail is not null at this moment. We kind of expect it to be
+      // null as we have swapped the current tail out and replaced with null at the beginning of the function. If the
+      // value would now be any different from null this may indicate an implementation issue as another core would have
+      // updated the tail (which should not happen) and thus the tail of the popped node will get lost.
+      let _ = self.tail.compare_exchange(
+        ptr::null_mut(),
+        next_node,
+        Ordering::AcqRel,
+        Ordering::Relaxed,
+      );
       dsb(); // from this moment all cores/thread accessing the tail will see a proper node to pop
     }
 
@@ -133,9 +143,10 @@ impl<T: Sized + 'static> Queue<T> {
   }
 }
 
-impl<T> Drop for Queue<T> {
+impl<T: Sized + 'static> Drop for Queue<T> {
   fn drop(&mut self) {
     // dropping the queue means we need to drop all contained items
     // as they have allocated memory
+    while let Pop::Data(_) = self.pop() {}
   }
 }
