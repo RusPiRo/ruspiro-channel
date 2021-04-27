@@ -30,10 +30,16 @@ env = { FEATURES = "async" }
 command = "cargo"
 args = ["doc", "--features", "${FEATURES}", "--open"]
 
-[tasks.pi3]
+[tasks.pi3_blocking]
+env = { FEATURES = "" }
+run_task = "build"
+
+[tasks.pi3_async]
 env = { FEATURES = "async" }
 run_task = "build"
 
+[tasks.pi3]
+dependencies = [ "pi3_blocking", "pi3_async"]
 [tasks.clean]
 command = "cargo"
 args = ["clean"]

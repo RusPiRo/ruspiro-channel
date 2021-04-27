@@ -12,6 +12,5 @@
 #![no_std]
 
 extern crate alloc;
-extern crate rlibc;
 
 pub mod mpmc;
