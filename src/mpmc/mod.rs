@@ -26,7 +26,7 @@ pub fn channel<T: 'static>() -> (Sender<T>, Receiver<T>) {
 /// Sender that is using a queue to push messages/data that a receiver could work on
 /// The sending part could be used by several cores in parallel to push stuff to the queue
 #[repr(C)]
-pub struct Sender<T> {
+pub struct Sender<T: 'static> {
   inner: Arc<Queue<T>>,
 }
 
@@ -53,7 +53,7 @@ impl<T: 'static> Clone for Sender<T> {
 /// Receiver that is using a queue to pop messages/data that has been pushed their for
 /// processing
 #[repr(C)]
-pub struct Receiver<T> {
+pub struct Receiver<T: 'static> {
   inner: Arc<Queue<T>>,
 }
 
